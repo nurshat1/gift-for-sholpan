@@ -8,7 +8,7 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: #f5f5f5; /* светлый фон как у твоего проекта */
+      background: #f5f5f5;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -38,7 +38,7 @@
 <body>
   <!-- Музыка -->
   <audio id="bgMusic" autoplay loop>
-    <source src="music.mp3" type="audio/mpeg">
+    <source src="Twice - Feel Special.mp3" type="audio/mpeg">
     Ваш браузер не поддерживает аудио.
   </audio>
 
@@ -49,12 +49,12 @@
   <canvas id="sparkCanvas"></canvas>
 
   <script>
-    // Фоновая музыка (для iOS нужно кликнуть)
+    // Фоновая музыка для iOS
     document.addEventListener('click', () => {
       document.getElementById('bgMusic').play();
     }, { once: true });
 
-    // Материалы
+    // Контент
     const materials = [
       '<video controls autoplay><source src="1.mp4" type="video/mp4">Ваш браузер не поддерживает видео.</video>',
       '<img src="2.png" alt="Картина">',
