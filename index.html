@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подарок для Айман</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #f5f5f5; /* светлый фон как у твоего проекта */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #content {
+      position: relative;
+      z-index: 1;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+    video, img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <!-- Музыка -->
+  <audio id="bgMusic" autoplay loop>
+    <source src="music.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио.
+  </audio>
+
+  <!-- Контент -->
+  <div id="content"></div>
+
+  <!-- Искры -->
+  <canvas id="sparkCanvas"></canvas>
+
+  <script>
+    // Фоновая музыка (для iOS нужно кликнуть)
+    document.addEventListener('click', () => {
+      document.getElementById('bgMusic').play();
+    }, { once: true });
+
+    // Материалы
+    const materials = [
+      '<video controls autoplay><source src="1.mp4" type="video/mp4">Ваш браузер не поддерживает видео.</video>',
+      '<img src="2.png" alt="Картина">',
+      '<img src="3.png" alt="Письмо">'
+    ];
+
+    let current = 0;
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = materials[current];
+
+    let lastShake = Date.now();
+
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          window.addEventListener('devicemotion', handleMotion);
+        } else {
+          alert('Для работы требуется доступ к датчику движения.');
+        }
+      }).catch(console.error);
+    } else {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+
+    function handleMotion(event) {
+      const acc = event.accelerationIncludingGravity;
+      const totalAcc = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+
+      if (totalAcc > 20) {
+        const now = Date.now();
+        if (now - lastShake > 1000) {
+          current = (current + 1) % materials.length;
+          contentDiv.innerHTML = materials[current];
+          lastShake = now;
+        }
+      }
+    }
+
+    // Искры
+    const canvas = document.getElementById('sparkCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    const sparks = [];
+    for (let i = 0; i < 100; i++) {
+      sparks.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        dx: (Math.random() - 0.5) * 2,
+        dy: (Math.random() - 0.5) * 2,
+        size: Math.random() * 2 + 1,
+        color: `hsl(${Math.random() * 360}, 100%, 70%)`
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let s of sparks) {
+        ctx.fillStyle = s.color;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        s.x += s.dx;
+        s.y += s.dy;
+
+        if (s.x < 0 || s.x > canvas.width) s.dx *= -1;
+        if (s.y < 0 || s.y > canvas.height) s.dy *= -1;
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
