@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Подарок для Айман</title>
+  <title>Подарок для Шолпан</title>
   <style>
     body {
       margin: 0;
@@ -33,9 +33,39 @@
       pointer-events: none;
       z-index: 2;
     }
+    #notice {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 3;
+      background: rgba(255, 255, 255, 0.8);
+      color: #333;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      max-width: 90vw;
+    }
+    #nextBtn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 3;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #007BFF;
+      color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
+  <!-- Подсказка -->
+  <div id="notice">
+    Если встряхивание не работает: разрешите доступ к движениям в Настройки → Safari → Доступ к движениям и ориентации.
+  </div>
+
   <!-- Музыка -->
   <audio id="bgMusic" autoplay loop>
     <source src="Twice - Feel Special.mp3" type="audio/mpeg">
@@ -48,11 +78,29 @@
   <!-- Искры -->
   <canvas id="sparkCanvas"></canvas>
 
+  <!-- Кнопка -->
+  <button id="nextBtn">Следующий</button>
+
   <script>
-    // Фоновая музыка для iOS
+    // Фоновая музыка + доступ к движениям для iOS
     document.addEventListener('click', () => {
       document.getElementById('bgMusic').play();
+      requestMotionPermission();
     }, { once: true });
+
+    function requestMotionPermission() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(response => {
+          if (response === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+          } else {
+            alert('Для работы требуется доступ к датчику движения.');
+          }
+        }).catch(console.error);
+      } else {
+        window.addEventListener('devicemotion', handleMotion);
+      }
+    }
 
     // Контент
     const materials = [
@@ -67,18 +115,6 @@
 
     let lastShake = Date.now();
 
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-      DeviceMotionEvent.requestPermission().then(response => {
-        if (response === 'granted') {
-          window.addEventListener('devicemotion', handleMotion);
-        } else {
-          alert('Для работы требуется доступ к датчику движения.');
-        }
-      }).catch(console.error);
-    } else {
-      window.addEventListener('devicemotion', handleMotion);
-    }
-
     function handleMotion(event) {
       const acc = event.accelerationIncludingGravity;
       const totalAcc = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
@@ -86,11 +122,18 @@
       if (totalAcc > 20) {
         const now = Date.now();
         if (now - lastShake > 1000) {
-          current = (current + 1) % materials.length;
-          contentDiv.innerHTML = materials[current];
+          nextMaterial();
           lastShake = now;
         }
       }
+    }
+
+    // Кнопка
+    document.getElementById('nextBtn').addEventListener('click', nextMaterial);
+
+    function nextMaterial() {
+      current = (current + 1) % materials.length;
+      contentDiv.innerHTML = materials[current];
     }
 
     // Искры
